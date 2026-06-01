@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Fitness Semanal</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #e9ecef; color: #333; display: flex; justify-content: center; padding: 40px; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); width: 100%; max-width: 950px; display: flex; flex-direction: column; gap: 20px; }
+        .main-tabs { display: flex; gap: 10px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 20px; }
+        .main-tab-btn { background: none; border: none; font-size: 18px; font-weight: bold; color: #6c757d; cursor: pointer; padding: 10px 20px; border-radius: 8px 8px 0 0; transition: 0.3s; }
+        .main-tab-btn.active { color: #007bff; border-bottom: 3px solid #007bff; }
+        
+        .content-area { display: flex; gap: 40px; }
+        .form-section, .result-section { flex: 1; min-width: 350px; }
+        h2 { color: #2c3e50; margin-top: 0; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        label { display: block; margin-top: 15px; font-weight: 600; font-size: 14px; color: #555;}
+        input, select { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; background-color: #f8f9fa; }
+        
+        button.btn-primary { width: 100%; padding: 14px; margin-top: 25px; background: linear-gradient(135deg, #007bff, #0056b3); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        
+        /* Controles das Abas Internas (App vs JSON) */
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 8px; background: #f1f3f5; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: #6c757d; transition: 0.3s; }
+        .tab-btn.active { background: #2c3e50; color: white; }
+
+        pre { background: #282c34; color: #61afef; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 13px; height: 450px; margin: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+        .json-key { color: #e06c75; } .json-string { color: #98c379; } .json-value { color: #d19a66; }
+        
+        /* Visão do App (Cards) */
+        .app-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 10px; padding: 20px; max-height: 450px; overflow-y: auto; display: none; }
+        .app-card::-webkit-scrollbar { width: 8px; } .app-card::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        
+        .header-perfil { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .badge { background: #e8f4fd; color: #007bff; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; }
+        .stat-box { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-box span { display: block; font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 1px;}
+        .stat-box strong { font-size: 20px; color: #2c3e50; }
+        .lista-exercicios { list-style: none; padding: 0; margin: 0 0 15px 0; }
+        .lista-exercicios li { background: #fdfdfd; border-left: 4px solid #28a745; padding: 10px 15px; margin-bottom: 8px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-weight: 500; font-size: 14px; }
+        
+        /* Tela de Busca */
+        .search-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        .user-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="main-tabs">
+        <button class="main-tab-btn active" id="nav-cadastro" onclick="mudarTela('cadastro')">Cadastrar Aluno</button>
+        <button class="main-tab-btn" id="nav-busca" onclick="mudarTela('busca')">Alunos por Objetivo</button>
+    </div>
+
+    <div id="tela-cadastro" class="content-area">
+        <div class="form-section">
+            <h2>🏋️ Novo Aluno</h2>
+            <label for="nome">Nome Completo:</label>
+            <input type="text" id="nome" placeholder="Ex: João Victor">
+            
+            <label for="peso">Peso Atual (kg):</label>
+            <input type="number" id="peso" step="0.1" placeholder="Ex: 82.5">
+            
+            <label for="objetivo">Objetivo Principal:</label>
+            <select id="objetivo">
+                <option value="Hipertrofia">Hipertrofia</option>
+                <option value="Emagrecimento">Emagrecimento</option>
+            </select>
+            
+            <label for="restricao">Restrição Médica (Opcional):</label>
+            <select id="restricao">
+                <option value="Nenhuma">Nenhuma</option>
+                <option value="Diabetes">Diabetes</option>
+                <option value="Lesão no Joelho">Lesão no Joelho</option>
+            </select>
+            
+            <button class="btn-primary" onclick="gerarPlano()">Gerar Plano Semanal</button>
+        </div>
+
+        <div class="result-section">
+            <h2>📱 Plano Gerado</h2>
+            
+            <div class="tabs">
+                <button class="tab-btn active" id="btn-app" onclick="trocarAbaExibicao('app')">Visão do App</button>
+                <button class="tab-btn" id="btn-db" onclick="trocarAbaExibicao('db')">Visualizar JSON</button>
+            </div>
+
+            <p id="placeholder-msg" style="text-align: center; color: #888; margin-top: 50px;">
+                Preencha os dados e clique em gerar para ver o plano completo.
+            </p>
+
+            <div id="view-app" class="app-card">
+                <div class="header-perfil">
+                    <h3 id="res-nome" style="margin: 0; color: #2c3e50;">---</h3>
+                    <span id="res-objetivo" class="badge">---</span>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span>Meta Diária Dieta</span>
+                        <strong id="res-calorias">--- kcal</strong>
+                    </div>
+                    <div class="stat-box">
+                        <span>Peso Inicial</span>
+                        <strong id="res-peso">--- kg</strong>
+                    </div>
+                </div>
+
+                <div id="container-semana"></div>
+            </div>
+
+            <div id="view-db" style="display: none;">
+                <pre id="jsonOutput">{ Aguardando envio... }</pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="tela-busca" style="display: none;">
+        <h2>🔍 Listar Alunos</h2>
+        <p style="color: #666; font-size: 14px;">Selecione um grupo de alunos focado em um objetivo específico.</p>
+        
+        <div class="search-container">
+            <select id="busca-objetivo" style="margin-top: 0;">
+                <option value="Hipertrofia">Objetivo: Hipertrofia</option>
+                <option value="Emagrecimento">Objetivo: Emagrecimento</option>
+            </select>
+            <button class="btn-primary" style="margin-top: 0; width: 200px;" onclick="buscarAlunos()">Buscar</button>
+        </div>
+
+        <div id="lista-resultados" class="app-card" style="display: block; height: 350px;">
+            <p style="text-align: center; color: #888; margin-top: 50px;">Selecione um objetivo e clique em buscar.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function mudarTela(tela) {
+        document.getElementById('nav-cadastro').classList.remove('active');
+        document.getElementById('nav-busca').classList.remove('active');
+        document.getElementById('tela-cadastro').style.display = 'none';
+        document.getElementById('tela-busca').style.display = 'none';
+
+        if(tela === 'cadastro') {
+            document.getElementById('nav-cadastro').classList.add('active');
+            document.getElementById('tela-cadastro').style.display = 'flex';
+        } else {
+            document.getElementById('nav-busca').classList.add('active');
+            document.getElementById('tela-busca').style.display = 'block';
+        }
+    }
+
+    function trocarAbaExibicao(aba) {
+        document.getElementById('btn-app').classList.remove('active');
+        document.getElementById('btn-db').classList.remove('active');
+        document.getElementById('view-app').style.display = 'none';
+        document.getElementById('view-db').style.display = 'none';
+
+        if(aba === 'app') {
+            document.getElementById('btn-app').classList.add('active');
+            document.getElementById('view-app').style.display = 'block';
+        } else {
+            document.getElementById('btn-db').classList.add('active');
+            document.getElementById('view-db').style.display = 'block';
+        }
+    }
+
+    async function gerarPlano() {
+        const nome = document.getElementById('nome').value;
+        const peso = parseFloat(document.getElementById('peso').value);
+        const objetivo = document.getElementById('objetivo').value;
+        const restricao = document.getElementById('restricao').value;
+
+        if(!nome || isNaN(peso)) return alert("Preencha o nome e o peso!");
+
+        const usuario = { nome: nome, pesoAtual: peso, objetivo: objetivo, restricoesMedicas: [restricao] };
+        document.getElementById('placeholder-msg').textContent = "Calculando métricas...";
+
+        try {
+            const response = await fetch('http://localhost:8080/api/perfis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(usuario)
+            });
+
+            if(response.ok) {
+                const data = await response.json();
+                
+                document.getElementById('placeholder-msg').style.display = 'none';
+                document.getElementById('view-app').style.display = 'block'; 
+                trocarAbaExibicao('app'); 
+
+                // Preenche o cabeçalho
+                document.getElementById('res-nome').innerText = data.nome;
+                document.getElementById('res-objetivo').innerText = data.objetivo;
+                document.getElementById('res-peso').innerText = data.pesoAtual + ' kg';
+                
+                if(data.planoSemanal.segunda_feira) {
+                    document.getElementById('res-calorias').innerText = data.planoSemanal.segunda_feira.caloriasMeta + ' kcal';
+                }
+
+                // Renderiza os 5 dias
+                const containerSemana = document.getElementById('container-semana');
+                containerSemana.innerHTML = ''; 
+
+                const ordemDias = ['segunda_feira', 'terca_feira', 'quarta_feira', 'quinta_feira', 'sexta_feira'];
+                const nomesExibicao = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira'];
+
+                ordemDias.forEach((dia, index) => {
+                    if(data.planoSemanal[dia]) {
+                        const treino = data.planoSemanal[dia];
+                        let htmlDia = `
+                            <h4 style="margin-top: 25px; margin-bottom: 10px; color: #555; border-bottom: 2px solid #eee; padding-bottom: 5px;">
+                                📅 ${nomesExibicao[index]} <br>
+                                <span style="color: #007bff; font-size: 14px; font-weight: normal;">Foco: ${treino.focoDoDia}</span>
+                            </h4>
+                            <ul class="lista-exercicios">
+                        `;
+                        treino.exercicios.forEach(ex => { htmlDia += `<li>💪 ${ex}</li>`; });
+                        htmlDia += `</ul>`;
+                        containerSemana.innerHTML += htmlDia;
+                    }
+                });
+
+                // Preenche o JSON para a aba técnica
+                document.getElementById('jsonOutput').innerHTML = syntaxHighlight(JSON.stringify(data, undefined, 4));
+
+            } else {
+                alert("Erro ao processar dados no servidor.");
+            }
+        } catch (error) { alert("Erro de conexão. Verifique se o servidor está ativo."); }
+    }
+
+    async function buscarAlunos() {
+        const objetivo = document.getElementById('busca-objetivo').value;
+        const lista = document.getElementById('lista-resultados');
+        lista.innerHTML = '<p style="text-align: center;">Buscando registros...</p>';
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/perfis/objetivo/${objetivo}`);
+            
+            if(response.ok) {
+                const dados = await response.json();
+                lista.innerHTML = '';
+                
+                if(dados.length === 0) {
+                    lista.innerHTML = '<p style="text-align: center;">Nenhum aluno cadastrado com este objetivo.</p>';
+                    return;
+                }
+
+                dados.forEach(aluno => {
+                    lista.innerHTML += `
+                        <div class="user-card">
+                            <div>
+                                <strong style="font-size: 18px;">${aluno.nome}</strong><br>
+                                <span style="color: #666; font-size: 14px;">Peso: ${aluno.pesoAtual}kg | Restrição: ${aluno.restricoesMedicas[0]}</span>
+                            </div>
+                            <span class="badge">${aluno.objetivo}</span>
+                        </div>
+                    `;
+                });
+            }
+        } catch (error) { alert("Falha ao comunicar com o banco de dados."); }
+    }
+
+    function syntaxHighlight(json) {
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'json-value';
+            if (/^"/.test(match)) { if (/:$/.test(match)) { cls = 'json-key'; } else { cls = 'json-string'; } }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+    }
+</script>
+
+</body>
+</html>
