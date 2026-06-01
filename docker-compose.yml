@@ -1,0 +1,15 @@
+services:
+  couchbase:
+    image: couchbase:enterprise-7.2.0
+    container_name: couchbase-server
+    ports:
+      - "8091-8096:8091-8096"
+      - "11210-11211:11210-11211"
+    environment:
+      - CB_USERNAME=Administrator
+      - CB_PASSWORD=senha_secreta
+    volumes:
+      - couchbase-data:/opt/couchbase/var
+
+volumes:
+  couchbase-data:
