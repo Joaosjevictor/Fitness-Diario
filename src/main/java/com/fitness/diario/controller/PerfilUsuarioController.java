@@ -21,7 +21,7 @@ public class PerfilUsuarioController {
         this.service = service;
     }
 
-    // Endpoint para criar o usuário e gerar a dieta automaticamente (O "C" do CRUD)
+    // Endpoint para criar o usuário e gerar a dieta automaticamente
     @PostMapping
     public ResponseEntity<PerfilUsuario> criarPerfil(@RequestBody PerfilUsuario usuario) {
         // O Controller recebe apenas as métricas básicas e repassa para o Service
@@ -29,7 +29,7 @@ public class PerfilUsuarioController {
         return new ResponseEntity<>(perfilGerado, HttpStatus.CREATED);
     }
 
-    // Endpoint para demonstrar a busca profunda do Couchbase (O "R" do CRUD)
+    // Endpoint para demonstrar a busca profunda do Couchbase
     @GetMapping("/objetivo/{objetivo}")
     public ResponseEntity<List<PerfilUsuario>> buscarPorObjetivo(@PathVariable String objetivo) {
         List<PerfilUsuario> perfis = service.buscarPorObjetivo(objetivo);
