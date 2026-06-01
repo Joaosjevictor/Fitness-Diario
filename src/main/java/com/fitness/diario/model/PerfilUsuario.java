@@ -10,14 +10,14 @@ import lombok.Data;
 import java.util.List;
 import java.util.Map;
 
-@Data // O Lombok gera os getters, setters e construtores automaticamente
+@Data
 @Document
 @Collection("perfis") // Onde os documentos serão salvos dentro do Bucket
 public class PerfilUsuario {
 
     @Id
     @GeneratedValue(strategy = GenerationStrategy.UNIQUE)
-    private String id; // Ex: um UUID gerado automaticamente
+    private String id;
 
     @Field
     private String nome;
@@ -31,7 +31,7 @@ public class PerfilUsuario {
     @Field
     private List<String> restricoesMedicas; // Ex: ["Diabetes", "Lesão no Joelho"]
 
-    // Aqui está a magia do banco de documentos: o plano de treino é aninhado!
+   
     @Field
     private Map<String, PlanoDiario> planoSemanal; 
 }
