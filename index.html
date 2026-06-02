@@ -42,7 +42,13 @@
         
         /* Tela de Busca */
         .search-container { display: flex; gap: 10px; margin-bottom: 20px; }
-        .user-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .user-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            }
     </style>
 </head>
 <body>
@@ -232,36 +238,84 @@
     }
 
     async function buscarAlunos() {
-        const objetivo = document.getElementById('busca-objetivo').value;
-        const lista = document.getElementById('lista-resultados');
-        lista.innerHTML = '<p style="text-align: center;">Buscando registros...</p>';
+    const objetivo = document.getElementById('busca-objetivo').value;
+    const lista = document.getElementById('lista-resultados');
 
-        try {
-            const response = await fetch(`http://localhost:8080/api/perfis/objetivo/${objetivo}`);
-            
-            if(response.ok) {
-                const dados = await response.json();
-                lista.innerHTML = '';
-                
-                if(dados.length === 0) {
-                    lista.innerHTML = '<p style="text-align: center;">Nenhum aluno cadastrado com este objetivo.</p>';
-                    return;
+    lista.innerHTML = '<p style="text-align:center;">Buscando registros...</p>';
+
+    try {
+        const response = await fetch(`http://localhost:8080/api/perfis/objetivo/${objetivo}`);
+
+        if(response.ok) {
+            const dados = await response.json();
+
+            lista.innerHTML = '';
+
+            if(dados.length === 0) {
+                lista.innerHTML = '<p style="text-align:center;">Nenhum aluno encontrado.</p>';
+                return;
+            }
+
+            dados.forEach(aluno => {
+
+                let treinoHTML = '';
+
+                if(aluno.planoSemanal) {
+
+                    const dias = [
+                        'segunda_feira',
+                        'terca_feira',
+                        'quarta_feira',
+                        'quinta_feira',
+                        'sexta_feira'
+                    ];
+
+                    dias.forEach(dia => {
+
+                        if(aluno.planoSemanal[dia]) {
+
+                            treinoHTML += `
+                                <div style="margin-top:10px;">
+                                    <strong>${dia.replace('_',' ')}</strong>
+                                    <ul>
+                                        ${aluno.planoSemanal[dia].exercicios
+                                            .map(ex => `<li>${ex}</li>`)
+                                            .join('')}
+                                    </ul>
+                                </div>
+                            `;
+                        }
+                    });
                 }
 
-                dados.forEach(aluno => {
-                    lista.innerHTML += `
-                        <div class="user-card">
-                            <div>
-                                <strong style="font-size: 18px;">${aluno.nome}</strong><br>
-                                <span style="color: #666; font-size: 14px;">Peso: ${aluno.pesoAtual}kg | Restrição: ${aluno.restricoesMedicas[0]}</span>
-                            </div>
-                            <span class="badge">${aluno.objetivo}</span>
+                lista.innerHTML += `
+                    <div class="user-card" style="display:block;">
+
+                        <div style="display:flex;justify-content:space-between;">
+                            <strong style="font-size:18px;">
+                                ${aluno.nome}
+                            </strong>
+
+                            <span class="badge">
+                                ${aluno.objetivo}
+                            </span>
                         </div>
-                    `;
-                });
-            }
-        } catch (error) { alert("Falha ao comunicar com o banco de dados."); }
+
+                        <p>
+                            Peso: ${aluno.pesoAtual} kg
+                        </p>
+
+                        ${treinoHTML}
+
+                    </div>
+                `;
+            });
+        }
+
+    } catch(error) {
+        alert("Erro ao buscar alunos.");
     }
+}
 
     function syntaxHighlight(json) {
         json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
